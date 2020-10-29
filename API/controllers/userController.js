@@ -1,31 +1,42 @@
 var User = require('../models/userModel');
 const bcrypt = require('bcrypt');
 
-var saltRounds = 10;
+hashingPassword = passwordToHash => {
+    return bcrypt.hash(passwordToHash, 10);
+};
+
+isMatchPassword = (passwordFromUser, hashedPassword) => {
+    return bcrypt.compare(passwordFromUser, hashedPassword);
+};
 
 const register = async (req, res) => {
 
-    bcrypt.hash(req.query.password, saltRounds, async (err, hash) => {
+    var bcrypt_password = await hashingPassword(req.query.password);
 
-        if(err){
-            return res.send(err);
-        };
-
-        var bcrypt_password = hash;
-
-        const user = new User({
-            email: req.query.email,
-            password: bcrypt_password,
-        });
-
-        await user.save().then(u => res.send(u)).catch(e => res.send(e));
+    const user = new User({
+        email: req.query.email,
+        password: bcrypt_password,
     });
+
+    await user.save().then(u => res.send(u)).catch(e => res.send(e));
 
 };
 
 const login = async (req, res) => {
 
-    res.send('login');
+    await User.findOne({email: req.query.email})
+        .then(async u => {
+            var hashedPassword = u.password;
+            var passwordFromUser = 'esra123.';
+            var match = await isMatchPassword(passwordFromUser, hashedPassword);
+
+            if(match){
+                return res.send('Login Success');
+            } else {
+                return res.send('Login Failed');
+            };
+        })
+        .catch(e => res.send(e));
 
 };
 
@@ -34,16 +45,15 @@ const logout = async (req, res) => {
     res.send('logout');
 
 };
-const update_account = async (req, res) => {
+const update_password = async (req, res) => {
 
     res.send('update_account');
 
 };
 
-
 module.exports = {
     register,
     login,
     logout,
-    update_account,
+    update_password,
 };
