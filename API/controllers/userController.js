@@ -1,11 +1,13 @@
 var User = require('../models/userModel');
 const bcrypt = require('bcrypt');
+var jwt = require('jsonwebtoken');
+require('dotenv').config();
 
 hashingPassword = passwordToHash => {
-    return bcrypt.hash(passwordToHash, 10);
+    return bcrypt.hash(passwordToHash, 9);
 };
 
-isMatchPassword = (passwordFromUser, hashedPassword) => {
+isPasswordMatch = (passwordFromUser, hashedPassword) => {
     return bcrypt.compare(passwordFromUser, hashedPassword);
 };
 
@@ -18,25 +20,28 @@ const register = async (req, res) => {
         password: bcrypt_password,
     });
 
-    await user.save().then(u => res.send(u)).catch(e => res.send(e));
+    var token = jwt.sign({ userId: user._id.toString() }, process.env.jwtKey);
+
+    await user.save().then(u => res.status(201).send({u, token})).catch(e => res.send(e));
 
 };
 
 const login = async (req, res) => {
 
     await User.findOne({email: req.query.email})
-        .then(async u => {
-            var hashedPassword = u.password;
-            var passwordFromUser = 'esra123.';
-            var match = await isMatchPassword(passwordFromUser, hashedPassword);
+        .then(async user => {
+            var hashedPassword = user.password;
+            var passwordFromUser = 'cihat123.';
+            var match = await isPasswordMatch(passwordFromUser, hashedPassword);
+            var token = jwt.sign({ userId: user._id.toString() }, process.env.jwtKey);
 
             if(match){
-                return res.send('Login Success');
+                return res.status(200).send({user, token});
             } else {
-                return res.send('Login Failed');
+                return res.status(401).send('Login Failed');
             };
         })
-        .catch(e => res.send(e));
+        .catch(e => res.status(401).send(e));
 
 };
 

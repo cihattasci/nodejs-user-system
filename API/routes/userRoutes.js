@@ -1,10 +1,11 @@
 var express = require('express');
 var router = express.Router();
+var auth = require('../middleware/auth');
 var {register, login, logout, update_password} = require('../controllers/userController');
 
 router.post('/register', register);
 
-router.post('/login', login);
+router.post('/login',auth, login);
 
 router.post('/logout', logout);
 
