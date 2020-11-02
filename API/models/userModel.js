@@ -12,9 +12,13 @@ const UserSchema = new Schema({
         type: String,
         required: true,
     },
-    date :{
+    date: {
         type : Date,
         default : Date.now,
+    },
+    token: {
+        type: String,
+        required: false,
     },
 }, {
     timestamps: true

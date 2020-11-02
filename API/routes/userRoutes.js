@@ -1,14 +1,14 @@
 var express = require('express');
 var router = express.Router();
 var auth = require('../middleware/auth');
-var {register, login, logout, update_password} = require('../controllers/userController');
+var userController = require('../controllers/userController');
 
-router.post('/register', register);
+router.post('/register', userController.register);
 
-router.post('/login',auth, login);
+router.post('/login', userController.login);
 
-router.post('/logout', logout);
+router.post('/logout', userController.logout);
 
-router.put('/update_account' ,update_password);
+router.put('/update_password', userController.update_password);
 
 module.exports = router;

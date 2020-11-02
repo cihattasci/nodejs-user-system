@@ -11,32 +11,38 @@ isPasswordMatch = (passwordFromUser, hashedPassword) => {
     return bcrypt.compare(passwordFromUser, hashedPassword);
 };
 
-const register = async (req, res) => {
+module.exports.register = async (req, res) => {
 
     var bcrypt_password = await hashingPassword(req.query.password);
 
-    const user = new User({
+    var user = new User({
         email: req.query.email,
         password: bcrypt_password,
     });
 
     var token = jwt.sign({ userId: user._id.toString() }, process.env.jwtKey);
 
-    await user.save().then(u => res.status(201).send({u, token})).catch(e => res.send(e));
+    var user = new User({
+        email: user.email,
+        password: user.password,
+        token: token,
+    });
+
+    await user.save().then(u => res.status(200).send(u)).catch(e => res.status(401).send(e));
 
 };
 
-const login = async (req, res) => {
+module.exports.login = async (req, res) => {
 
     await User.findOne({email: req.query.email})
         .then(async user => {
             var hashedPassword = user.password;
-            var passwordFromUser = 'cihat123.';
+            var passwordFromUser = 'ABI123.';
             var match = await isPasswordMatch(passwordFromUser, hashedPassword);
             var token = jwt.sign({ userId: user._id.toString() }, process.env.jwtKey);
-
+            await User.updateOne({_id: user._id}, {token: token});
             if(match){
-                return res.status(200).send({user, token});
+                return res.status(200).send(user);
             } else {
                 return res.status(401).send('Login Failed');
             };
@@ -45,20 +51,18 @@ const login = async (req, res) => {
 
 };
 
-const logout = async (req, res) => {
+module.exports.logout = async (req, res) => {
 
     res.send('logout');
 
 };
-const update_password = async (req, res) => {
+module.exports.update_password = async (req, res) => {
 
-    res.send('update_account');
+    var new_password = 'ABI123.';
+    var new_hashed_password = await hashingPassword(new_password);
 
-};
+    await User.updateOne({email: req.query.email}, {password: new_hashed_password})
+        .then(user => res.send('Password updated'))
+        .catch(e => res.send(e));
 
-module.exports = {
-    register,
-    login,
-    logout,
-    update_password,
 };
