@@ -37,10 +37,10 @@ module.exports.login = async (req, res) => {
     await User.findOne({email: req.query.email})
         .then(async user => {
             var hashedPassword = user.password;
-            var passwordFromUser = 'ABI123.';
+            var passwordFromUser = 'abi123.';
             var match = await isPasswordMatch(passwordFromUser, hashedPassword);
             var token = jwt.sign({ userId: user._id.toString() }, process.env.jwtKey);
-            await User.updateOne({_id: user._id}, {token: token});
+            await User.findOneAndUpdate({_id: user._id}, {token: token});
             if(match){
                 return res.status(200).send(user);
             } else {
@@ -56,13 +56,14 @@ module.exports.logout = async (req, res) => {
     res.send('logout');
 
 };
+
 module.exports.update_password = async (req, res) => {
 
-    var new_password = 'ABI123.';
+    var new_password = 'abi123.';
     var new_hashed_password = await hashingPassword(new_password);
 
-    await User.updateOne({email: req.query.email}, {password: new_hashed_password})
-        .then(user => res.send('Password updated'))
+    await User.findOneAndUpdate({email: req.query.email}, {password: new_hashed_password})
+        .then(user => res.send(user))
         .catch(e => res.send(e));
 
 };
