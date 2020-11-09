@@ -20,7 +20,7 @@ module.exports.register = async (req, res) => {
         password: bcrypt_password,
     });
 
-    var token = jwt.sign({ userId: user._id.toString() }, process.env.jwtKey);
+    var token = jwt.sign({ user }, process.env.jwtKey);
 
     var user = new User({
         email: user.email,
@@ -35,20 +35,17 @@ module.exports.register = async (req, res) => {
 module.exports.login = async (req, res) => {
 
     await User.findOne({email: req.query.email})
-        .then(async user => {
-            var hashedPassword = user.password;
-            var passwordFromUser = 'abi123.';
-            var match = await isPasswordMatch(passwordFromUser, hashedPassword);
-            var token = jwt.sign({ userId: user._id.toString() }, process.env.jwtKey);
-            await User.findOneAndUpdate({_id: user._id}, {token: token}, (e, u) => {
+            .then(async user => {
+                var hashedPassword = user.password;
+                var passwordFromUser = 'abi123.';
+                var match = await isPasswordMatch(passwordFromUser, hashedPassword);
                 if(match){
-                    return res.status(200).send(u);
+                    return res.status(200).send(user);
                 } else {
-                    return res.status(401).send('Login Failed');
+                    return res.status(401).send('Password Login Failed');
                 };
-            });
-        })
-        .catch(e => res.status(401).send(e));
+            })
+            .catch(e => res.status(401).send('No User'));
 
 };
 
