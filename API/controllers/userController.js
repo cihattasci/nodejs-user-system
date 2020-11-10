@@ -1,6 +1,7 @@
 var User = require('../models/userModel');
 const bcrypt = require('bcrypt');
 var jwt = require('jsonwebtoken');
+const { findOneAndUpdate } = require('../models/userModel');
 require('dotenv').config();
 
 hashingPassword = passwordToHash => {
@@ -36,28 +37,29 @@ module.exports.login = async (req, res) => {
 
     await User.findOne({email: req.query.email})
             .then(async user => {
-                var hashedPassword = user.password;
-                var passwordFromUser = 'abi123.';
-                var match = await isPasswordMatch(passwordFromUser, hashedPassword);
-                if(match){
-                    return res.status(200).send(user);
+                if(user.token === null) {
+                    const newLoginToken = jwt.sign({user}, process.env.jwtKey);
+                    await User.findOneAndUpdate({email: user.email}, {token: newLoginToken});
                 } else {
-                    return res.status(401).send('Password Login Failed');
-                };
+                    var hashedPassword = user.password;
+                    var passwordFromUser = 'abi123.';
+                    var match = await isPasswordMatch(passwordFromUser, hashedPassword);
+                    if(match){
+                        return res.status(200).send(user);
+                    } else {
+                        return res.status(401).send('Password Login Failed');
+                    }
+                }
             })
             .catch(e => res.status(401).send('No User'));
 
 };
 
 module.exports.logout = async (req, res) => {
-
-    await User.findOneAndUpdate({email: req.query.email}, {token: null}, (err, docs) => {
-        if(err){
-            return res.send(err);
-        };
-
-        return res.send(docs);
-    });
+    
+    await User.findOneAndUpdate({email: req.user.user.email}, {token: null})
+        .then(user => res.send(user))
+        .catch(e => res.send(e));
 
 };
 

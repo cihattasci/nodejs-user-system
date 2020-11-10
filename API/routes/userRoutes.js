@@ -7,7 +7,7 @@ router.post('/register', userController.register);
 
 router.post('/login', verifyToken, userController.login);
 
-router.post('/logout', userController.logout);
+router.post('/logout', verifyToken, userController.logout);
 
 router.put('/update_password', userController.update_password);
 
